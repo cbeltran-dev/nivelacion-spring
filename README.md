@@ -596,7 +596,7 @@ public class UsuarioResponse {
 
 ### UsuarioService
 
-Modificar `UsuarioService` para trabajar con DTOs y agregar los métodos de mapeo:
+Modificar `UsuarioService` para trabajar con DTOs. El mapeo se hace directamente en cada método, campo por campo:
 
 ```java
 package com.example.tienda.service;
@@ -617,7 +617,8 @@ public class UsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    private UsuarioEntity mapToEntity(UsuarioRequest request) {
+    public UsuarioResponse saveUsuario(UsuarioRequest request) {
+        // Request → Entity campo por campo
         UsuarioEntity entity = new UsuarioEntity();
         entity.setNombres(request.getNombres());
         entity.setApellidos(request.getApellidos());
@@ -626,10 +627,28 @@ public class UsuarioService {
         entity.setEmail(request.getEmail());
         entity.setFechaNacimiento(request.getFechaNacimiento());
         entity.setDni(request.getDni());
-        return entity;
+
+        UsuarioEntity saved = usuarioRepository.save(entity);
+
+        // Entity → Response campo por campo
+        UsuarioResponse response = new UsuarioResponse();
+        response.setNombres(saved.getNombres());
+        response.setApellidos(saved.getApellidos());
+        response.setUsername(saved.getUsername());
+        response.setEmail(saved.getEmail());
+        response.setFechaNacimiento(saved.getFechaNacimiento());
+        response.setDni(saved.getDni());
+
+        return response;
     }
 
-    private UsuarioResponse mapToResponse(UsuarioEntity entity) {
+    public UsuarioResponse findById(UUID id) {
+        Optional<UsuarioEntity> optional = usuarioRepository.findById(id);
+        if (optional.isEmpty()) return null;
+
+        UsuarioEntity entity = optional.get();
+
+        // Entity → Response campo por campo
         UsuarioResponse response = new UsuarioResponse();
         response.setNombres(entity.getNombres());
         response.setApellidos(entity.getApellidos());
@@ -637,37 +656,45 @@ public class UsuarioService {
         response.setEmail(entity.getEmail());
         response.setFechaNacimiento(entity.getFechaNacimiento());
         response.setDni(entity.getDni());
+
         return response;
-    }
-
-    public UsuarioResponse saveUsuario(UsuarioRequest request) {
-        UsuarioEntity entity = mapToEntity(request);
-        UsuarioEntity saved = usuarioRepository.save(entity);
-        return mapToResponse(saved);
-    }
-
-    public UsuarioResponse findById(UUID id) {
-        Optional<UsuarioEntity> optional = usuarioRepository.findById(id);
-        if (optional.isEmpty()) return null;
-        return mapToResponse(optional.get());
     }
 
     public List<UsuarioResponse> findAll() {
         List<UsuarioEntity> entities = usuarioRepository.findAll();
         List<UsuarioResponse> responseList = new ArrayList<>();
+
         for (UsuarioEntity entity : entities) {
-            responseList.add(mapToResponse(entity));
+            UsuarioResponse response = new UsuarioResponse();
+            response.setNombres(entity.getNombres());
+            response.setApellidos(entity.getApellidos());
+            response.setUsername(entity.getUsername());
+            response.setEmail(entity.getEmail());
+            response.setFechaNacimiento(entity.getFechaNacimiento());
+            response.setDni(entity.getDni());
+            responseList.add(response);
         }
+
         return responseList;
     }
 
     public List<UsuarioResponse> findByNombre(String nombre) {
         List<UsuarioEntity> entities = usuarioRepository.findByNombresContainingIgnoreCase(nombre);
         if (entities.isEmpty()) return null;
+
         List<UsuarioResponse> responseList = new ArrayList<>();
+
         for (UsuarioEntity entity : entities) {
-            responseList.add(mapToResponse(entity));
+            UsuarioResponse response = new UsuarioResponse();
+            response.setNombres(entity.getNombres());
+            response.setApellidos(entity.getApellidos());
+            response.setUsername(entity.getUsername());
+            response.setEmail(entity.getEmail());
+            response.setFechaNacimiento(entity.getFechaNacimiento());
+            response.setDni(entity.getDni());
+            responseList.add(response);
         }
+
         return responseList;
     }
 }
